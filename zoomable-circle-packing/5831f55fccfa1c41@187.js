@@ -13,7 +13,7 @@ function _chart(d3, data) {
 
   const pack = data => d3.pack()
       .size([width, height])
-      .padding(3)
+      .padding(1)
     (d3.hierarchy(data)
       .sum(d => d.value)
       .sort((a, b) => b.value - a.value));
@@ -29,38 +29,54 @@ function _chart(d3, data) {
 
   const node = svg.append("g")
     .selectAll("g")
-    .data(root.descendants().slice(1))
+    .data(root.descendants())
     .join("g")
     .attr("transform", d => `translate(${d.x},${d.y})`);
   
-  // Sichtbarer Kreis
-  node.append("circle")
-    .attr("r", d => d.r)
-    .attr("fill", d => d.children ? color(d.depth) : "#A169BD")
-    .attr("pointer-events", d => !d.children ? "auto" : "none") 
-    .on("mouseover", function() { d3.select(this).attr("stroke", "#E998F4"); })
-    .on("mouseout", function() { d3.select(this).attr("stroke", null); })
-    .on("click", (event, d) => focus !== d && (zoom(event, d), event.stopPropagation()));
+    let parentClicked = false; // Verfolgt, ob der Parent Circle geklickt wurde
 
-  // Text für den Firmennamen
-  node.each(function(d) {
-    const group = d3.select(this);
-    const textLines = splitText(d.data.name, Math.max(6, d.r / 5)); 
-    const lineHeight = 1.1; 
+    node.append("circle")
+      .attr("r", d => d.r)
+      .attr("fill", d => d.children ? color(d.depth) : "#A169BD")
+      .attr("pointer-events", "auto") // Interaktionen für alle Kreise aktivieren
+      .on("mouseover", function() { 
+        d3.select(this)
+          .attr("stroke", "#E998F4")
+          .attr("stroke-width", 3); 
+      })
+      .on("mouseout", function() { 
+        d3.select(this)
+          .attr("stroke", null)
+          .attr("stroke-width", null); 
+      })
+      .on("click", (event, d) => {
+        if (d.depth === 1) { // Parent Circle erkannt
+          parentClicked = !parentClicked; // Umschalten der Zustände (toggle)
+          updateBubbleText();
+        }
+        focus !== d && (zoom(event, d), event.stopPropagation());
+      });
+    
+    node.each(function(d) {
+      const group = d3.select(this);
+      const textLines = splitText(d.data.name, Math.max(6, d.r / 5)); 
+      const lineHeight = 1.1; 
+    
+      textLines.forEach((line, i) => {
+        group.append("text")
+          .attr("class", "company-name")
+          .style("font-family", "Roboto, sans-serif")
+          .style("fill", "#220032")
+          .style("text-anchor", "middle")
+          .style("font-size", `${Math.min(14, d.r / 5)}px`)
+          .attr("data-original-font-size", `${Math.min(14, d.r / 5)}px`) 
+          .attr("dy", `${(i - (textLines.length - 1) / 2) * lineHeight}em`) 
+          .style("pointer-events", "none")
+          .text(line);
+      });
 
-    textLines.forEach((line, i) => {
-      group.append("text")
-        .attr("class", "company-name")
-        .style("font-family", "Roboto, sans-serif")
-        .style("fill", "#220032")
-        .style("text-anchor", "middle")
-        .style("font-size", `${Math.min(14, d.r / 5)}px`)
-        .attr("data-original-font-size", `${Math.min(14, d.r / 5)}px`) 
-        .attr("dy", `${(i - (textLines.length - 1) / 2) * lineHeight}em`) 
-        .style("pointer-events", "none")
-        .text(line);
-    });
-
+    
+    
     // Text für die Zahl 
     const textHeight = textLines.length * 1.2; 
     const fixedOffset = 1.2; 
@@ -76,6 +92,43 @@ function _chart(d3, data) {
       .text(d => d.data.number ? d.data.number : ''); 
   });
 
+
+  function updateBubbleText() {
+    node.each(function(d) {
+      if (d.depth === 2) {
+        const group = d3.select(this);
+        group.selectAll(".company-name-group").remove();
+  
+        if (parentClicked && d.data.percentage) {
+          group.append("text")
+            .attr("class", "company-name")
+            .style("font-family", "Roboto, sans-serif")
+            .style("fill", "#220032")
+            .style("text-anchor", "middle")
+            .style("font-size", "14px")
+            .attr("dy", "0.35em")
+            .text(d.data.percentage);
+        } else {
+          const textLines = splitText(d.data.name, Math.max(6, d.r / 5)); 
+          const lineHeight = 1.1; 
+          const companyNameGroup = group.append("g")
+            .attr("class", "company-name-group");
+  
+          textLines.forEach((line, i) => {
+            companyNameGroup.append("text")
+              .attr("class", "company-name")
+              .style("font-family", "Roboto, sans-serif")
+              .style("fill", "#220032")
+              .style("text-anchor", "middle")
+              .style("font-size", `${Math.min(14, d.r / 5)}px`)
+              .attr("dy", `${(i - (textLines.length - 1) / 2) * lineHeight}em`) 
+              .text(parentClicked ? '' : line);
+          });
+        }
+      }
+    });
+  }
+  
   // Zoom-Funktion
   svg.on("click", (event) => zoom(event, root));
   let focus = root;

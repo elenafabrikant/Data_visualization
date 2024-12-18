@@ -1,8 +1,8 @@
 {
-  "name": "Global Emissions",
+  "name": "",
   "children": [
     {
-      "name": "Fossil Fuel Companies",
+      "name": "",
       "children": [
         {
           "name": "Saudi Aramco",
@@ -15,30 +15,35 @@
           "name": "Chevron",
           "number": "43.35 tonnes CO2",
           "value": 3700.5,
+          "percentage": "20%",
           "children": []
         },
         {
           "name": "Gazprom",
           "number": "43.23 tonnes CO2",
           "value": 3647.5,
+          "percentage": "20%",
           "children": []
         },
         {
           "name": "ExxonMobil",
           "number": "41.9 tonnes CO2",
           "value": 3535,
+          "percentage": "20%",
           "children": []
         },
         {
           "name": "National Iranien Oil Co.",
           "number": "35.66 tonnes CO2",
           "value": 2990.5,
+          "percentage": "20%",
           "children": []
         },
         {
           "name": "BP",
           "number": "34.02 tonnes CO2",
           "value": 2850,
+          "percentage": "20%",
           "children": []
         },
         {
