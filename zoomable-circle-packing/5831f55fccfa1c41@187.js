@@ -57,24 +57,24 @@ function _chart(d3, data) {
         focus !== d && (zoom(event, d), event.stopPropagation());
       });
     
-    node.each(function(d) {
-      const group = d3.select(this);
-      const textLines = splitText(d.data.name, Math.max(6, d.r / 5)); 
-      const lineHeight = 1.1; 
+      node.each(function(d) {
+        const group = d3.select(this);
+        const textLines = splitText(d.data.name, Math.max(6, d.r / 5)); 
+        const lineHeight = 1.1; 
+      
+        textLines.forEach((line, i) => {
+          group.append("text")
+            .attr("class", "company-name")
+            .style("font-family", "Roboto, sans-serif")
+            .style("fill", "#220032")
+            .style("text-anchor", "middle")
+            .style("font-size", `${Math.min(14, d.r / 5)}px`) // Dynamische Schriftgröße
+            .attr("data-original-font-size", `${Math.min(14, d.r / 5)}px`) // **Speichere die Original-Schriftgröße**
+            .attr("dy", `${(i - (textLines.length - 1) / 2) * lineHeight}em`) 
+            .text(line);
+        });
     
-      textLines.forEach((line, i) => {
-        group.append("text")
-          .attr("class", "company-name")
-          .style("font-family", "Roboto, sans-serif")
-          .style("fill", "#220032")
-          .style("text-anchor", "middle")
-          .style("font-size", `${Math.min(14, d.r / 5)}px`)
-          .attr("data-original-font-size", `${Math.min(14, d.r / 5)}px`) 
-          .attr("dy", `${(i - (textLines.length - 1) / 2) * lineHeight}em`) 
-          .style("pointer-events", "none")
-          .text(line);
-      });
-
+      
     
     
     // Text für die Zahl 
@@ -97,15 +97,20 @@ function _chart(d3, data) {
     node.each(function(d) {
       if (d.depth === 2) {
         const group = d3.select(this);
-        group.selectAll(".company-name-group").remove();
+        
+        // **Entferne NUR Company-Namen, aber NICHT die Zahlen**
+        group.selectAll("text.company-name").remove(); 
   
         if (parentClicked && d.data.percentage) {
-          group.append("text")
+          const percentageGroup = group.append("g")
+            .attr("class", "company-name-group");
+          
+          percentageGroup.append("text")
             .attr("class", "company-name")
             .style("font-family", "Roboto, sans-serif")
             .style("fill", "#220032")
             .style("text-anchor", "middle")
-            .style("font-size", "14px")
+            .style("font-size", `${d.r / 5}px`) // Dynamische Schriftgröße
             .attr("dy", "0.35em")
             .text(d.data.percentage);
         } else {
@@ -115,20 +120,24 @@ function _chart(d3, data) {
             .attr("class", "company-name-group");
   
           textLines.forEach((line, i) => {
+            const fontSize = d.r / 5; 
             companyNameGroup.append("text")
               .attr("class", "company-name")
               .style("font-family", "Roboto, sans-serif")
               .style("fill", "#220032")
               .style("text-anchor", "middle")
-              .style("font-size", `${Math.min(14, d.r / 5)}px`)
+              .style("font-size", `${fontSize}px`) 
+              .attr("data-original-font-size", `${fontSize}px`) 
               .attr("dy", `${(i - (textLines.length - 1) / 2) * lineHeight}em`) 
-              .text(parentClicked ? '' : line);
+              .text(line);
           });
         }
       }
     });
   }
   
+  
+
   // Zoom-Funktion
   svg.on("click", (event) => zoom(event, root));
   let focus = root;
